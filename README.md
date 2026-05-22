@@ -2,7 +2,7 @@
 
 &nbsp;
 
-**[→ 進入 / enter / 入る](https://bougiezoe.github.io/nordisk-regn/)**
+**[→ 進入 / enter / 入る](https://bougiezoe.github.io/Nordisk-regn/)**
 
 *イヤホンをつけて。雨の音がする。*
 
