@@ -498,7 +498,11 @@ R.domElement.addEventListener('pointerdown', (e) => {
 })
 R.domElement.addEventListener('pointermove', (e) => {
   if (!ptrs.has(e.pointerId)) {
-    if (!deskMode && !downAt) R.domElement.style.cursor = inLap(pick(e.clientX, e.clientY)) ? 'pointer' : ''
+    if (!downAt) {
+      const _hp = pick(e.clientX, e.clientY)
+      const _hk = keyOf(lastHit && lastHit.object)
+      R.domElement.style.cursor = ((_hk && canType()) || (!deskMode && inLap(_hp))) ? 'pointer' : ''
+    }
     return
   }
   const prev = ptrs.get(e.pointerId)
