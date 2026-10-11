@@ -58,7 +58,7 @@ function updC() {
   CX.font = '12px "SF Mono",monospace'
   for (let i = 0; i < CL.length; i++) {
     const l = CL[i]; const y = 14 + 24 + i * 14
-    if (y < 24 || y > 390) continue
+    if (y < 24 || y > 358) continue
     CX.fillStyle = l.startsWith('$') ? '#7ec894' : l.startsWith('>') ? '#6cb0e0' : '#8090a0'
     CX.fillText(l, 12, y)
   }
@@ -66,9 +66,11 @@ function updC() {
     CX.fillStyle = '#7ec894'
     CX.fillRect(12 + CL[CL.length-1].length * 7, 14 + 24 + (CL.length-1)*14 - 10, 7, 11)
   }
+  CX.fillStyle = '#0a0e14'; CX.fillRect(0, 366, 640, 34)
+  CX.fillStyle = 'rgba(140,180,220,.14)'; CX.fillRect(0, 366, 640, 1)
   CX.fillStyle = '#7ec894'; CX.font = '12px "SF Mono",monospace'
   const _inp = window.__typed || ''
-  CX.fillText('> ' + _inp + (Math.floor(cf / 25) % 2 === 0 ? '▌' : ''), 12, 388)
+  CX.fillText('> ' + _inp.slice(-52) + (Math.floor(cf / 25) % 2 === 0 ? '▌' : ''), 12, 388)
 }
 updC()
 const TX = new THREE.CanvasTexture(CV)
@@ -345,10 +347,33 @@ const HOME_POS = CAM.position.clone(), HOME_TGT = new THREE.Vector3(.05, .75, 0)
 const DESK_POS = new THREE.Vector3(LX, .93, 2.02), DESK_TGT = new THREE.Vector3(LX, .855, 1.40)
 const lookCur = HOME_TGT.clone()
 let camGoal = null, deskMode = false
+// orbit state (spherical around lookCur), goals ease toward targets every frame
+function sph(p, t) { const o = p.clone().sub(t); return { r: o.length(), th: Math.atan2(o.x, o.z), ph: Math.acos(Math.min(1, Math.max(-1, o.y / (o.length() || 1)))) } }
+const _h = sph(HOME_POS, HOME_TGT), _d = sph(DESK_POS, DESK_TGT)
+const orb = { r: _h.r, th: _h.th, ph: _h.ph }
+const orbG = { r: _h.r, th: _h.th, ph: _h.ph }
+const TGTBOX = { x0: -.9, x1: .9, y0: .35, y1: 1.3, z0: .7, z1: 2.0 }
+function clampTgt(v) { v.x = Math.min(TGTBOX.x1, Math.max(TGTBOX.x0, v.x)); v.y = Math.min(TGTBOX.y1, Math.max(TGTBOX.y0, v.y)); v.z = Math.min(TGTBOX.z1, Math.max(TGTBOX.z0, v.z)); return v }
+function applyOrbit() {
+  const sp = Math.sin(orb.ph), x = orb.r * sp * Math.sin(orb.th), y = orb.r * Math.cos(orb.ph), z = orb.r * sp * Math.cos(orb.th)
+  CAM.position.set(lookCur.x + x, lookCur.y + y, lookCur.z + z)
+}
+const lookG = HOME_TGT.clone()
+function goOrbitPos(p, t) {
+  const g = sph(p, t)
+  let dth = (g.th - orbG.th) % (Math.PI * 2)
+  if (dth > Math.PI) dth -= Math.PI * 2
+  if (dth < -Math.PI) dth += Math.PI * 2
+  orbG.th += dth; orbG.ph = g.ph; orbG.r = g.r
+  lookG.copy(t)
+}
+const HOME_TGT0 = HOME_TGT.clone()
+window.__orbitTo = (th, ph, r) => { orbG.th = th; orbG.ph = Math.min(1.52, Math.max(.08, ph)); orbG.r = Math.min(4.5, Math.max(.3, r)); camGoal = 'orbit' }
+applyOrbit()
 const LAPBOX = { x0: -.30, x1: .16, y0: .72, y1: 1.05, z0: 1.22, z1: 1.66 }
 function inLap(p) { return p && p.x > LAPBOX.x0 && p.x < LAPBOX.x1 && p.y > LAPBOX.y0 && p.y < LAPBOX.y1 && p.z > LAPBOX.z0 && p.z < LAPBOX.z1 }
-function goDesk() { deskMode = true; camGoal = { pos: DESK_POS, tgt: DESK_TGT }; toast('⌨️ 直接打字上屏 · 输入 bougiezoe 有惊喜 · Esc 回房间') }
-function goRoom() { deskMode = false; window.__typed = ''; camGoal = { pos: HOME_POS, tgt: HOME_TGT } }
+function goDesk() { deskMode = true; goOrbitPos(DESK_POS, DESK_TGT); camGoal = 'orbit'; toast('⌨️ 直接打字上屏 · 输入 bougiezoe 有惊喜 · Esc 回房间') }
+function goRoom() { deskMode = false; window.__typed = ''; goOrbitPos(HOME_POS, HOME_TGT0); camGoal = 'orbit' }
 function pick(cx, cy) {
   PTR.set(cx / innerWidth * 2 - 1, -(cy / innerHeight) * 2 + 1)
   RAY.setFromCamera(PTR, CAM)
@@ -356,12 +381,62 @@ function pick(cx, cy) {
   return h ? h.point : null
 }
 window.__desk = () => deskMode
-R.domElement.addEventListener('click', (e) => { if (!deskMode && inLap(pick(e.clientX, e.clientY))) goDesk() })
+R.domElement.style.touchAction = 'none'
+R.domElement.addEventListener('contextmenu', (e) => e.preventDefault())
 R.domElement.addEventListener('dblclick', () => { if (deskMode) goRoom() })
-R.domElement.addEventListener('pointermove', (e) => {
-  if (deskMode) return
-  R.domElement.style.cursor = inLap(pick(e.clientX, e.clientY)) ? 'pointer' : ''
+const ptrs = new Map()
+let downAt = null
+R.domElement.addEventListener('pointerdown', (e) => {
+  ptrs.set(e.pointerId, [e.clientX, e.clientY])
+  if (ptrs.size === 1) downAt = [e.clientX, e.clientY, e.button]
+  if (ptrs.size === 2) { const p = [...ptrs.values()]; downAt = null; ptrs.set('pinch', Math.hypot(p[0][0] - p[1][0], p[0][1] - p[1][1])) }
+  try { R.domElement.setPointerCapture(e.pointerId) } catch (err) {}
 })
+R.domElement.addEventListener('pointermove', (e) => {
+  if (!ptrs.has(e.pointerId)) {
+    if (!deskMode && !downAt) R.domElement.style.cursor = inLap(pick(e.clientX, e.clientY)) ? 'pointer' : ''
+    return
+  }
+  const prev = ptrs.get(e.pointerId)
+  const dx = e.clientX - prev[0], dy = e.clientY - prev[1]
+  ptrs.set(e.pointerId, [e.clientX, e.clientY])
+  if (ptrs.size === 3) {
+    const p = [...ptrs.values()].filter(Array.isArray)
+    const d = Math.hypot(p[0][0] - p[1][0], p[0][1] - p[1][1])
+    if (ptrs.get('pinch')) { orbG.r = Math.min(4.5, Math.max(.3, orbG.r * ptrs.get('pinch') / (d || 1))); camGoal = 'orbit' }
+    ptrs.set('pinch', d)
+    return
+  }
+  const pan = e.shiftKey || (downAt && downAt[2] === 2)
+  if (pan) {
+    const right = new THREE.Vector3().setFromMatrixColumn(CAM.matrix, 0)
+    const up = new THREE.Vector3().setFromMatrixColumn(CAM.matrix, 1)
+    lookG.addScaledVector(right, -dx * .0009 * orb.r).addScaledVector(up, dy * .0009 * orb.r)
+    clampTgt(lookG); camGoal = 'orbit'
+  } else {
+    orb.th -= dx * .0052; orbG.th = orb.th
+    orb.ph = orbG.ph = Math.min(1.52, Math.max(.06, orb.ph - dy * .0052))
+    camGoal = 'orbit'
+  }
+  R.domElement.style.cursor = 'grabbing'
+})
+function endPtr(e) {
+  const wasDown = downAt
+  ptrs.delete(e.pointerId)
+  if (ptrs.size < 3) ptrs.delete('pinch')
+  R.domElement.style.cursor = ''
+  if (wasDown && Math.hypot(e.clientX - wasDown[0], e.clientY - wasDown[1]) < 6 && wasDown[2] === 0) {
+    if (!deskMode && inLap(pick(e.clientX, e.clientY))) goDesk()
+  }
+  downAt = null
+}
+R.domElement.addEventListener('pointerup', endPtr)
+R.domElement.addEventListener('pointercancel', (e) => { ptrs.delete(e.pointerId); ptrs.delete('pinch'); downAt = null })
+R.domElement.addEventListener('wheel', (e) => {
+  e.preventDefault()
+  orbG.r = Math.min(4.5, Math.max(.3, orbG.r * Math.exp(e.deltaY * .0011)))
+  camGoal = 'orbit'
+}, { passive: false })
 addEventListener('keydown', (e) => {
   if (e.metaKey || e.ctrlKey || e.altKey) return
   if (e.key === 'Escape') { if (deskMode) goRoom(); return }
@@ -437,8 +512,15 @@ function anim() {
     else if (m.userData.dip) { m.userData.dip = 0; m.position.y = m.userData.y0 }
   }
   if (camGoal) {
-    CAM.position.lerp(camGoal.pos, .055); lookCur.lerp(camGoal.tgt, .07)
-    if (CAM.position.distanceTo(camGoal.pos) < .004) camGoal = null
+    let dth = (orbG.th - orb.th) % (Math.PI * 2)
+    if (dth > Math.PI) dth -= Math.PI * 2
+    if (dth < -Math.PI) dth += Math.PI * 2
+    orb.th += dth * (1 - Math.exp(-dt * 6))
+    orb.ph += (orbG.ph - orb.ph) * (1 - Math.exp(-dt * 6))
+    orb.r += (orbG.r - orb.r) * (1 - Math.exp(-dt * 5))
+    lookCur.lerp(lookG, 1 - Math.exp(-dt * 6))
+    if (Math.abs(dth) < .002 && Math.abs(orbG.ph - orb.ph) < .002 && Math.abs(orbG.r - orb.r) < .002 && lookCur.distanceTo(lookG) < .002) camGoal = null
+    applyOrbit()
   }
   CAM.lookAt(lookCur)
   // Render outdoor
