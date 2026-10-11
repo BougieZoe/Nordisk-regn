@@ -66,6 +66,9 @@ function updC() {
     CX.fillStyle = '#7ec894'
     CX.fillRect(12 + CL[CL.length-1].length * 7, 14 + 24 + (CL.length-1)*14 - 10, 7, 11)
   }
+  CX.fillStyle = '#7ec894'; CX.font = '12px "SF Mono",monospace'
+  const _inp = window.__typed || ''
+  CX.fillText('> ' + _inp + (Math.floor(cf / 25) % 2 === 0 ? '▌' : ''), 12, 388)
 }
 updC()
 const TX = new THREE.CanvasTexture(CV)
@@ -222,51 +225,79 @@ for (const p of [[-.5,.355,1.65],[-.5,.355,1.15],[.6,.355,1.65],[.6,.355,1.15]])
   const leg = new THREE.Mesh(new THREE.CylinderGeometry(.02,.02,.685,6), legM); leg.position.set(p[0], .355, p[2]); RM.add(leg)
 }
 
-// ─── LAPTOP ───
+// ─── THINKPAD X1 (Eclipse Black, red TrackPoint) on the desk ───
 const DS = .72 + .035/2 // desk surface y = .7375
-const LX = -.05 // laptop x (centered-left)
+const LX = -.05 // machine x (same seat)
 const LZ = 1.38
-const BW = .35, BD = .24, BH = .012
-const BY = DS + BH/2
+const TP_B = 0x161618, TP_K = 0x0e0e10, TP_D = 0x232327
+const keyMeshes = []
+const tpMat = new THREE.MeshStandardMaterial({ color: TP_B, roughness: .55, metalness: .25 })
+const tpDark = new THREE.MeshStandardMaterial({ color: TP_K, roughness: .6 })
+const tpDeck = new THREE.MeshStandardMaterial({ color: TP_D, roughness: .5 })
 
-// Body
-const body = new THREE.Mesh(new THREE.BoxGeometry(BW, BH, BD),
-  new THREE.MeshStandardMaterial({ color: 0x2c2c30, roughness: .2, metalness: .8 }))
-body.position.set(LX, BY, LZ); RM.add(body)
+// Base + keyboard deck
+const BW = .32, BD = .215, BH = .014
+const BY = DS + BH / 2
+const tBase = new THREE.Mesh(new THREE.BoxGeometry(BW, BH, BD), tpMat)
+tBase.position.set(LX, BY, LZ); RM.add(tBase)
+const tWell = new THREE.Mesh(new THREE.BoxGeometry(.29, .004, .115), tpDark)
+tWell.position.set(LX, BY + BH / 2 + .001, LZ + .028); RM.add(tWell)
 
-// Keyboard area
-const kbArea = new THREE.Mesh(new THREE.BoxGeometry(.25, .003, .14),
-  new THREE.MeshStandardMaterial({ color: 0x1a1a1e, roughness: .6 }))
-kbArea.position.set(LX, BY + BH/2 + .001, LZ + .01); RM.add(kbArea)
-
-// Keys
-for (let r = 0; r < 5; r++)
-  for (let c = 0; c < 10; c++) {
-    const key = new THREE.Mesh(new THREE.BoxGeometry(.015, .002, .012),
-      new THREE.MeshStandardMaterial({ color: 0x111113, roughness: .6 }))
-    key.position.set(LX + (c-4.5)*.023, BY + BH/2 + .003, LZ + .04 - r*.017); RM.add(key)
+// Keys: 5 rows + bottom row with wide spacebar
+for (let r = 0; r < 4; r++)
+  for (let c = 0; c < 12; c++) {
+    const key = new THREE.Mesh(new THREE.BoxGeometry(.019, .006, .014), tpDeck)
+    key.position.set(LX + (c - 5.5) * .0235, BY + BH / 2 + .005, LZ + .062 - r * .0205); key.userData.y0 = key.position.y; keyMeshes.push(key); RM.add(key)
   }
+for (let c = 0; c < 3; c++) {
+  const key = new THREE.Mesh(new THREE.BoxGeometry(.019, .006, .014), tpDeck)
+  key.position.set(LX + (c - 5.5) * .0235, BY + BH / 2 + .005, LZ - .020); key.userData.y0 = key.position.y; keyMeshes.push(key); RM.add(key)
+}
+const tSpace = new THREE.Mesh(new THREE.BoxGeometry(.095, .006, .014), tpDeck)
+tSpace.position.set(LX - .004, BY + BH / 2 + .005, LZ - .020); tSpace.userData.y0 = tSpace.position.y; keyMeshes.push(tSpace); RM.add(tSpace)
+for (let c = 0; c < 4; c++) {
+  const key = new THREE.Mesh(new THREE.BoxGeometry(.019, .006, .014), tpDeck)
+  key.position.set(LX + (c + 2.5) * .0235, BY + BH / 2 + .005, LZ - .020); key.userData.y0 = key.position.y; keyMeshes.push(key); RM.add(key)
+}
 
-// Trackpad
-const tp = new THREE.Mesh(new THREE.BoxGeometry(.065, .002, .04),
-  new THREE.MeshStandardMaterial({ color: 0x1a1a1e, roughness: .5 }))
-tp.position.set(LX, BY + BH/2 + .002, LZ - .065); RM.add(tp)
+// Red TrackPoint nub between G/H + three click buttons + glass pad
+const nub = new THREE.Mesh(new THREE.CylinderGeometry(.0045, .005, .006, 12),
+  new THREE.MeshStandardMaterial({ color: 0x330000, emissive: 0xcc2222, emissiveIntensity: .9, roughness: .5 }))
+nub.position.set(LX + .012, BY + BH / 2 + .007, LZ + .031); RM.add(nub)
+for (let b = 0; b < 3; b++) {
+  const btn = new THREE.Mesh(new THREE.BoxGeometry(.032, .004, .014), tpDark)
+  btn.position.set(LX - .036 + b * .036, BY + BH / 2 + .003, LZ - .043); RM.add(btn)
+}
+const tPad = new THREE.Mesh(new THREE.BoxGeometry(.10, .003, .038),
+  new THREE.MeshStandardMaterial({ color: 0x101012, roughness: .25, metalness: .4 }))
+tPad.position.set(LX, BY + BH / 2 + .002, LZ - .075); RM.add(tPad)
 
-// Lid (hinge at back edge)
-const SW = .32, SH = .21
-const HY = BY + BH/2, HZ = LZ + BD/2
-const lid = new THREE.Group()
-lid.position.set(LX, HY, HZ)
-lid.rotation.x = -.45
-RM.add(lid)
-
-// Screen (only mesh in lid group)
-const disp = new THREE.Mesh(new THREE.PlaneGeometry(SW, SH), new THREE.MeshStandardMaterial({
-  map: TX, emissive: new THREE.Color(.1, .18, .28), emissiveMap: TX, emissiveIntensity: 1.1,
-  roughness: .05, metalness: 0, side: THREE.DoubleSide
+// Hinges + lid open ~100°, screen runs the same live terminal
+const HY = BY + BH / 2, HZ = LZ + BD / 2
+for (const hx of [-.11, .11]) {
+  const hg = new THREE.Mesh(new THREE.CylinderGeometry(.008, .008, .05, 12), tpDark)
+  hg.rotation.z = Math.PI / 2
+  hg.position.set(LX + hx, HY + .004, HZ); RM.add(hg)
+}
+const SW = .30, SH = .19
+const tLid = new THREE.Group()
+tLid.position.set(LX, HY, HZ)
+tLid.rotation.x = -.18
+RM.add(tLid)
+const lidBack = new THREE.Mesh(new THREE.BoxGeometry(SW, SH, .008), tpMat)
+lidBack.position.set(0, SH / 2, 0); tLid.add(lidBack)
+const tDisp = new THREE.Mesh(new THREE.PlaneGeometry(SW - .02, SH - .024), new THREE.MeshStandardMaterial({
+  map: TX, emissive: new THREE.Color(.1, .18, .28), emissiveMap: TX, emissiveIntensity: 1.15,
+  roughness: .05, metalness: 0
 }))
-disp.position.set(0, SH/2, 0)
-lid.add(disp)
+tDisp.position.set(0, SH / 2, .0045); tLid.add(tDisp)
+// camera dot + red status dot on the bezel
+const tCam = new THREE.Mesh(new THREE.CircleGeometry(.0022, 12),
+  new THREE.MeshStandardMaterial({ color: 0x0a0f16, roughness: .2 }))
+tCam.position.set(0, SH - .012, .0045); tLid.add(tCam)
+const tDot = new THREE.Mesh(new THREE.CircleGeometry(.0018, 12),
+  new THREE.MeshStandardMaterial({ color: 0x220000, emissive: 0xff2a2a, emissiveIntensity: 1.2 }))
+tDot.position.set(-SW / 2 + .018, .012, .0045); tLid.add(tDot)
 
 // ─── TEA ───
 const teaCup = new THREE.Mesh(new THREE.CylinderGeometry(.032, .025, .05, 16),
@@ -305,6 +336,53 @@ const AUD = { ctx: null, gain: null, on: false,
 }
 document.getElementById('playbtn').onclick = function() { this.textContent = AUD.toggle() ? '❚❚' : '▶' }
 document.getElementById('vol').oninput = function() { AUD.setVol(this.value/100) }
+
+// ─── DESK FOCUS: glide to the ThinkPad and type on it ───
+window.__typed = ''
+const RAY = new THREE.Raycaster(), PTR = new THREE.Vector2()
+const HOME_POS = CAM.position.clone(), HOME_TGT = new THREE.Vector3(.05, .75, 0)
+const DESK_POS = new THREE.Vector3(LX, .93, 2.02), DESK_TGT = new THREE.Vector3(LX, .855, 1.40)
+const lookCur = HOME_TGT.clone()
+let camGoal = null, deskMode = false
+const LAPBOX = { x0: -.23, x1: .13, y0: .745, y1: 1.02, z0: 1.22, z1: 1.66 }
+function inLap(p) { return p && p.x > LAPBOX.x0 && p.x < LAPBOX.x1 && p.y > LAPBOX.y0 && p.y < LAPBOX.y1 && p.z > LAPBOX.z0 && p.z < LAPBOX.z1 }
+function goDesk() { deskMode = true; camGoal = { pos: DESK_POS, tgt: DESK_TGT }; toast('⌨️ 直接打字上屏 · 输入 bougiezoe 有惊喜 · Esc 回房间') }
+function goRoom() { deskMode = false; window.__typed = ''; camGoal = { pos: HOME_POS, tgt: HOME_TGT } }
+function pick(cx, cy) {
+  PTR.set(cx / innerWidth * 2 - 1, -(cy / innerHeight) * 2 + 1)
+  RAY.setFromCamera(PTR, CAM)
+  const h = RAY.intersectObjects(RM.children.filter(m => !m.isPoints), true)[0]
+  return h ? h.point : null
+}
+R.domElement.addEventListener('click', (e) => { if (!deskMode && inLap(pick(e.clientX, e.clientY))) goDesk() })
+R.domElement.addEventListener('pointermove', (e) => {
+  if (deskMode) return
+  R.domElement.style.cursor = inLap(pick(e.clientX, e.clientY)) ? 'pointer' : ''
+})
+addEventListener('keydown', (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return
+  if (e.key === 'Escape') { if (deskMode) goRoom(); return }
+  if (!deskMode) return
+  if (e.key === 'Backspace') { window.__typed = window.__typed.slice(0, -1); dip(-1) }
+  else if (e.key === 'Enter') commitLine()
+  else if (e.key.length === 1 && window.__typed.length < 48) { window.__typed += e.key; dip(e.key.charCodeAt(0)) }
+})
+function dip(code) { const m = keyMeshes[Math.abs(code) % keyMeshes.length]; if (m) m.userData.dip = 1 }
+function commitLine() {
+  const t = window.__typed.trim()
+  if (t.toLowerCase() === 'bougiezoe') {
+    CL.push('$ bougiezoe', '> → github.com/bougiezoe')
+    try { window.open('https://github.com/bougiezoe', '_blank') } catch (err) {}
+  }
+  else if (t) CL.push('$ ' + t)
+  window.__typed = ''; dip(13)
+}
+const TOAST = document.createElement('div')
+TOAST.style.cssText = 'position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:30;font-size:11px;letter-spacing:1px;color:rgba(255,255,255,.75);background:rgba(0,0,0,.45);backdrop-filter:blur(10px);padding:7px 16px;border-radius:16px;border:1px solid rgba(255,255,255,.08);transition:opacity .8s;pointer-events:none'
+TOAST.textContent = '🖱️ 点击电脑走近 · 直接打字 · Esc 返回'
+document.body.appendChild(TOAST)
+setTimeout(() => TOAST.style.opacity = '0', 7000)
+function toast(t) { TOAST.textContent = t; TOAST.style.opacity = '1'; clearTimeout(TOAST._t); TOAST._t = setTimeout(() => TOAST.style.opacity = '0', 5000) }
 
 // ════════════════════════════════════════════
 // ANIMATION
@@ -351,6 +429,15 @@ function anim() {
   }
   rain.geometry.attributes.position.needsUpdate = true
 
+  for (const m of keyMeshes) {
+    if (m.userData.dip > .02) { m.userData.dip *= .86; m.position.y = m.userData.y0 - .004 * m.userData.dip }
+    else if (m.userData.dip) { m.userData.dip = 0; m.position.y = m.userData.y0 }
+  }
+  if (camGoal) {
+    CAM.position.lerp(camGoal.pos, .055); lookCur.lerp(camGoal.tgt, .07)
+    if (CAM.position.distanceTo(camGoal.pos) < .004) camGoal = null
+  }
+  CAM.lookAt(lookCur)
   // Render outdoor
   R.setRenderTarget(RT); R.render(out, CAM)
   // Render room
