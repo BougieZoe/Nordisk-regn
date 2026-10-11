@@ -430,7 +430,10 @@ function endPtr(e) {
   }
   downAt = null
 }
-R.domElement.addEventListener('pointerup', endPtr)
+R.domElement.addEventListener('pointerup', (e) => {
+  endPtr(e)
+  for (const [id, v] of ptrs) if (Array.isArray(v)) ptrs.set(id, [e.clientX, e.clientY])
+})
 R.domElement.addEventListener('pointercancel', (e) => { ptrs.delete(e.pointerId); ptrs.delete('pinch'); downAt = null })
 R.domElement.addEventListener('wheel', (e) => {
   e.preventDefault()
