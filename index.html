@@ -298,6 +298,7 @@ tCam.position.set(0, SH - .012, .0045); tLid.add(tCam)
 const tDot = new THREE.Mesh(new THREE.CircleGeometry(.0018, 12),
   new THREE.MeshStandardMaterial({ color: 0x220000, emissive: 0xff2a2a, emissiveIntensity: 1.2 }))
 tDot.position.set(-SW / 2 + .018, .012, .0045); tLid.add(tDot)
+window.__dbg = { CAM, tDisp, LAPBOX }
 
 // ─── TEA ───
 const teaCup = new THREE.Mesh(new THREE.CylinderGeometry(.032, .025, .05, 16),
