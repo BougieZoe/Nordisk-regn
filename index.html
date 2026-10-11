@@ -39,9 +39,11 @@ document.body.appendChild(R.domElement)
 const CV = document.createElement('canvas'); CV.width = 640; CV.height = 400
 const CX = CV.getContext('2d')
 window.__typed = ''
-let scrABC = false, scrMsg = '', scrMsgT = 0, scrBatt = 100, scrBattT = 0
+let scrMsg = '', scrMsgT = 0, scrBatt = 100, scrBattT = 0
 let lastUser = -99
 const TOUR = ['hello, claude', 'rainy day coding', 'nordisk regn']
+const CODE = ['const drops = useMemo(', '  () => generateRain(), []', 'return <mesh>', '  <shaderMaterial />', '</mesh>', '$ npm test', '> PASS 14/14', '$ npx vibe-coding', '> rain shader', '> refraction', '> curtain physics', '$ git add .', "$ git commit -m 'feat: rain'", '> [main a1b2c3d]', '$ deploy', '> Preview ready', 'function animate() {', '  requestAnimationFrame(animate)', '  renderer.render(scene, cam)', '}', '// nordisk regn, day 3']
+let codeI = 0, codeNext = 0
 let tourP = 0, tourI = 0, tourNext = 0, tourErasing = false
 function drawMark(x, y, sc, color) {
   CX.strokeStyle = color; CX.lineCap = 'round'
@@ -52,6 +54,7 @@ function drawMark(x, y, sc, color) {
   CX.beginPath(); CX.moveTo(x + sc * .72, y - sc * .5); CX.lineTo(x + sc * .42, y + sc * .5); CX.stroke()
 }
 function tourTick(now) {
+  if (now >= codeNext) { codeNext = now + .8; CODE.push(CODE[codeI++ % CODE.length]); if (CODE.length > 40) CODE.shift() }
   if (now - lastUser < 9) return
   if (now < tourNext) return
   const ph = TOUR[tourP]
@@ -69,24 +72,19 @@ function updC() {
   tourTick(now)
   if (now - scrBattT > 120) { scrBattT = now; if (scrBatt > 5) scrBatt-- }
   CX.fillStyle = '#05070c'; CX.fillRect(0, 0, 640, 400)
-  if (scrABC) {
-    CX.fillStyle = '#f2f2f5'; CX.textAlign = 'center'
-    CX.font = '64px ui-monospace, monospace'; CX.fillText('Alphabet', 320, 180)
-    CX.fillStyle = '#8a8a90'; CX.font = '19px ui-monospace, monospace'
-    CX.fillText('A B C D E F G H I J K L M N O P Q R S T U V W X Y Z', 320, 236)
-    CX.fillStyle = 'rgba(140,180,220,.25)'; CX.fillRect(140, 262, 360, 1)
-    CX.fillStyle = '#6a6a70'; CX.font = '14px ui-monospace, monospace'
-    CX.fillText('click: back to terminal', 320, 300)
-    CX.textAlign = 'left'
-    return
-  }
   CX.fillStyle = 'rgba(255,255,255,.022)'
   for (let _y = 0; _y < 400; _y += 4) CX.fillRect(0, _y, 640, 1)
-  drawMark(320, 148, 118, '#f2f2f5')
-  CX.fillStyle = '#e8e8ea'; CX.font = '22px ui-monospace, Menlo, monospace'; CX.textAlign = 'left'
+  CX.font = '17px ui-monospace, Menlo, monospace'; CX.textAlign = 'left'
+  const _rows = CODE.slice(-13)
+  for (let _i = 0; _i < _rows.length; _i++) {
+    const _l = _rows[_i], _y = 46 + _i * 20
+    CX.fillStyle = _l.startsWith('$') ? '#7ec894' : _l.startsWith('>') ? '#6cb0e0' : '#9aa4b2'
+    CX.fillText(_l.slice(0, 52), 40, _y)
+  }
+  CX.fillStyle = '#e8e8ea'; CX.font = '22px ui-monospace, Menlo, monospace'
   const _inp = (window.__typed || '').slice(-38)
-  CX.fillText('> ' + _inp + (Math.floor(cf / 25) % 2 === 0 ? '▌' : ''), 52, 302)
-  if (scrMsg && now < scrMsgT) { CX.fillStyle = '#7ec894'; CX.fillText(scrMsg, 52, 330) }
+  CX.fillText('> ' + _inp + (Math.floor(cf / 25) % 2 === 0 ? '▌' : ''), 40, 330)
+  if (scrMsg && now < scrMsgT) { CX.fillStyle = '#7ec894'; CX.fillText(scrMsg.slice(0, 52), 40, 330) }
   CX.fillStyle = 'rgba(140,180,220,.22)'; CX.fillRect(24, 352, 592, 1)
   CX.fillStyle = '#8a8a90'; CX.font = '13px ui-monospace, monospace'
   CX.fillText('ThinkPad', 28, 378)
@@ -525,7 +523,6 @@ function endPtr(e) {
   if (wasDown && Math.hypot(e.clientX - wasDown[0], e.clientY - wasDown[1]) < 6 && wasDown[2] === 0) {
     lastUser = Date.now() / 1000
     const _p = pick(e.clientX, e.clientY)
-    if (deskMode && _p && _p.x > LX - .15 && _p.x < LX + .15 && _p.y > .82 && _p.y < 1.03 && _p.z > 1.26 && _p.z < 1.30) { scrABC = !scrABC; return }
     if (!deskMode && inLap(_p)) goDesk()
   }
   downAt = null
