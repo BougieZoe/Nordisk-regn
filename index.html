@@ -356,7 +356,7 @@ function pick(cx, cy) {
   return h ? h.point : null
 }
 window.__desk = () => deskMode
-R.domElement.addEventListener('click', (e) => { const _p = pick(e.clientX, e.clientY); window.__lastPick = _p ? [+_p.x.toFixed(3), +_p.y.toFixed(3), +_p.z.toFixed(3)] : null; if (!deskMode && inLap(_p)) goDesk() })
+R.domElement.addEventListener('click', (e) => { if (!deskMode && inLap(pick(e.clientX, e.clientY))) goDesk() })
 R.domElement.addEventListener('dblclick', () => { if (deskMode) goRoom() })
 R.domElement.addEventListener('pointermove', (e) => {
   if (deskMode) return
