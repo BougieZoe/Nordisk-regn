@@ -52,7 +52,7 @@ function drawMark(x, y, sc, color) {
   CX.beginPath(); CX.moveTo(x + sc * .72, y - sc * .5); CX.lineTo(x + sc * .42, y + sc * .5); CX.stroke()
 }
 function tourTick(now) {
-  if (now - lastUser < 9 || deskModeOn()) return
+  if (now - lastUser < 9) return
   if (now < tourNext) return
   const ph = TOUR[tourP]
   if (!tourErasing) {
@@ -63,7 +63,7 @@ function tourTick(now) {
     else { tourErasing = false; tourI = 0; tourP = (tourP + 1) % TOUR.length; tourNext = now + .8 }
   }
 }
-function deskModeOn() { return typeof deskMode !== 'undefined' && deskMode }
+function deskModeOn() { return false }
 function updC() {
   const now = Date.now() / 1000, cf = Math.floor(now * 30)
   tourTick(now)
