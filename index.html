@@ -440,10 +440,11 @@ R.domElement.addEventListener('wheel', (e) => {
   orbG.r = Math.min(4.5, Math.max(.3, orbG.r * Math.exp(e.deltaY * .0011)))
   camGoal = 'orbit'
 }, { passive: false })
+function canType() { return deskMode || (lookCur.distanceTo(DESK_TGT) < 0.55 && orb.r < 1.5) }
 addEventListener('keydown', (e) => {
   if (e.metaKey || e.ctrlKey || e.altKey) return
-  if (e.key === 'Escape') { if (deskMode) goRoom(); return }
-  if (!deskMode) return
+  if (e.key === 'Escape') { goRoom(); return }
+  if (!canType()) return
   if (e.key === 'Backspace') { window.__typed = window.__typed.slice(0, -1); dip(-1) }
   else if (e.key === 'Enter') commitLine()
   else if (e.key.length === 1 && window.__typed.length < 48) { window.__typed += e.key; dip(e.key.charCodeAt(0)) }
