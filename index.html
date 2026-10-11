@@ -352,7 +352,7 @@ function sph(p, t) { const o = p.clone().sub(t); return { r: o.length(), th: Mat
 const _h = sph(HOME_POS, HOME_TGT), _d = sph(DESK_POS, DESK_TGT)
 const orb = { r: _h.r, th: _h.th, ph: _h.ph }
 const orbG = { r: _h.r, th: _h.th, ph: _h.ph }
-const TGTBOX = { x0: -.9, x1: .9, y0: .35, y1: 1.3, z0: .7, z1: 2.0 }
+const TGTBOX = { x0: -.45, x1: .35, y0: .55, y1: 1.05, z0: 1.1, z1: 1.7 }
 function clampTgt(v) { v.x = Math.min(TGTBOX.x1, Math.max(TGTBOX.x0, v.x)); v.y = Math.min(TGTBOX.y1, Math.max(TGTBOX.y0, v.y)); v.z = Math.min(TGTBOX.z1, Math.max(TGTBOX.z0, v.z)); return v }
 function applyOrbit() {
   const sp = Math.sin(orb.ph), x = orb.r * sp * Math.sin(orb.th), y = orb.r * Math.cos(orb.ph), z = orb.r * sp * Math.cos(orb.th)
@@ -360,7 +360,7 @@ function applyOrbit() {
 }
 const lookG = HOME_TGT.clone()
 // stay in the open front hemisphere: never behind the lid, walls or curtain
-const TH0 = -1.15, TH1 = 1.15, PH0 = .15, PH1 = 1.53, R0 = .35, R1 = 2.6
+const TH0 = -1.0, TH1 = 1.0, PH0 = .15, PH1 = 1.53, R0 = .35, R1 = 2.2
 function clampOrb() {
   orbG.th = Math.min(TH1, Math.max(TH0, orbG.th))
   orb.th = Math.min(TH1, Math.max(TH0, orb.th))
