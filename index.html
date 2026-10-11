@@ -468,11 +468,21 @@ const LAPBOX = { x0: -.30, x1: .16, y0: .72, y1: 1.05, z0: 1.22, z1: 1.66 }
 function inLap(p) { return p && p.x > LAPBOX.x0 && p.x < LAPBOX.x1 && p.y > LAPBOX.y0 && p.y < LAPBOX.y1 && p.z > LAPBOX.z0 && p.z < LAPBOX.z1 }
 function goDesk() { deskMode = true; goOrbitPos(DESK_POS, DESK_TGT); camGoal = 'orbit'; toast('⌨️ 直接打字上屏 · 输入 bougiezoe 有惊喜 · Esc 回房间') }
 function goRoom() { deskMode = false; window.__typed = ''; goOrbitPos(HOME_POS, HOME_TGT0); camGoal = 'orbit' }
+let lastHit = null
 function pick(cx, cy) {
   PTR.set(cx / innerWidth * 2 - 1, -(cy / innerHeight) * 2 + 1)
   RAY.setFromCamera(PTR, CAM)
   const h = RAY.intersectObjects(RM.children.filter(m => !m.isPoints), true)[0]
+  lastHit = h || null
   return h ? h.point : null
+}
+function keyOf(o) { while (o) { if (o.userData && o.userData.code) return o; o = o.parent } return null }
+function pressCode(code) {
+  lastUser = Date.now() / 1000
+  if (code === 'Backspace') { window.__typed = window.__typed.slice(0, -1); dipKey('Backspace') }
+  else if (code === 'Enter') commitLine()
+  else if (code.length === 1 && window.__typed.length < 38) { window.__typed += code === ' ' ? ' ' : code.toLowerCase(); dipKey(code === ' ' ? ' ' : code.toLowerCase()) }
+  else dipKey(code)
 }
 window.__desk = () => deskMode
 R.domElement.style.touchAction = 'none'
@@ -523,6 +533,8 @@ function endPtr(e) {
   if (wasDown && Math.hypot(e.clientX - wasDown[0], e.clientY - wasDown[1]) < 6 && wasDown[2] === 0) {
     lastUser = Date.now() / 1000
     const _p = pick(e.clientX, e.clientY)
+    const _k = keyOf(lastHit && lastHit.object)
+    if (_k && canType()) { pressCode(_k.userData.code); return }
     if (!deskMode && inLap(_p)) goDesk()
   }
   downAt = null
@@ -542,14 +554,11 @@ addEventListener('keydown', (e) => {
   if (e.metaKey || e.ctrlKey || e.altKey) return
   if (e.key === 'Escape') { goRoom(); return }
   if (!canType()) return
-  lastUser = Date.now() / 1000
-  if (e.key === 'Backspace') { window.__typed = window.__typed.slice(0, -1); dipKey('Backspace') }
-  else if (e.key === 'Enter') commitLine()
-  else if (e.key === 'Shift') dipKey(e.code === 'ShiftRight' ? 'ShiftRight' : 'Shift')
-  else if (e.key === 'ArrowLeft') dipKey('Left')
-  else if (e.key === 'ArrowRight') dipKey('Right')
-  else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') dipKey('UpDown')
-  else if (e.key.length === 1 && window.__typed.length < 38) { window.__typed += e.key; dipKey(e.key === ' ' ? ' ' : e.key.toLowerCase()) }
+  if (e.key === 'Shift') pressCode(e.code === 'ShiftRight' ? 'ShiftRight' : 'Shift')
+  else if (e.key === 'ArrowLeft') pressCode('Left')
+  else if (e.key === 'ArrowRight') pressCode('Right')
+  else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') pressCode('UpDown')
+  else pressCode(e.key)
 })
 const keyByCode = {}
 for (const m of keyMeshes) keyByCode[m.userData.code] = m
@@ -593,15 +602,15 @@ function anim() {
   // Curtain wind
   const gust = Math.sin(t * .12) * .5 + .5
   let target = 0
-  if (gust > .55) target = -(gust-.55)/.45 * 1.25
+  if (gust > .55) target = -(gust-.55)/.45 * .5
   const ca = pivot.rotation.y; pivot.rotation.y += (target - ca) * .03
   const verts = CG.attributes.position.array
   for (let i = 0; i < verts.length; i += 3) {
     const ox = clothO[i], oy = clothO[i+1], oz = clothO[i+2]
-    const ny = (oy/(WH*1.05)+.5), ef = ox/CG.parameters.width, bm = Math.abs(pivot.rotation.y)/1.25
-    verts[i] = ox + Math.sin(t*3.5+ny*8+ef*5)*bm*.06*ef*.6
+    const ny = (oy/(WH*1.05)+.5), ef = ox/CG.parameters.width, bm = Math.abs(pivot.rotation.y)/.5
+    verts[i] = ox + Math.sin(t*3.5+ny*8+ef*5)*bm*.05*ef*.6
     verts[i+1] = oy + Math.sin(t*2.8+ny*7)*bm*.03*ef + Math.sin(t*4.2+ny*3)*bm*.015
-    verts[i+2] = oz + Math.sin(t*3+ny*6+ef*4)*bm*ef
+    verts[i+2] = oz + Math.sin(t*3+ny*6+ef*4)*bm*ef*.35
   }
   CG.attributes.position.needsUpdate = true; CG.computeVertexNormals()
 
