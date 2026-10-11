@@ -284,6 +284,7 @@ const KROWS = [
   [["Fn",1],["Ctrl",1],["Win",1],["Alt",1],[" ",7],["AltGr",1],["Left",1],["UpDown",1],["Right",1]],
 ]
 const KEYCODES = []
+const keyTopMat = new THREE.MeshStandardMaterial({ color: 0x4a86e8, roughness: .4 })
 KROWS.forEach((row, r) => {
   let kx = KX0
   const kz = LZ + .062 - r * .0195
@@ -292,6 +293,8 @@ KROWS.forEach((row, r) => {
     const key = new THREE.Mesh(new THREE.BoxGeometry(wd, .006, .0155), tpDeck)
     key.position.set(kx + wd / 2, BY + BH / 2 + .005, kz)
     key.userData.y0 = key.position.y; key.userData.code = code
+    const dish = new THREE.Mesh(new THREE.BoxGeometry(wd - .0045, .0016, .0115), keyTopMat)
+    dish.position.y = .0038; key.add(dish)
     keyMeshes.push(key); KEYCODES.push(code); RM.add(key)
     kx += w * KU
   }
