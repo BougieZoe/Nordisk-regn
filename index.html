@@ -369,6 +369,9 @@ combo.rotation.z = Math.PI / 2
 combo.position.set(LX + BW / 2 + .001, BY, LZ + .045); RM.add(combo)
 const kens = new THREE.Mesh(new THREE.BoxGeometry(.004, .004, .014), tpSlot)
 kens.position.set(LX + BW / 2 + .001, BY - .002, LZ + .075); RM.add(kens)
+// Soft cool fill over the laptop so its IBM blue reads like the figure
+const lapFill = new THREE.PointLight(0xcfd8ff, .55, 1.7)
+lapFill.position.set(LX + .12, 1.42, 1.95); RM.add(lapFill)
 // Rear vent slats + front lip LEDs
 for (let i = 0; i < 5; i++) {
   const v = new THREE.Mesh(new THREE.BoxGeometry(.02, .03, .003), tpSlot)
