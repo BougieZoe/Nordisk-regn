@@ -309,11 +309,13 @@ const nub = new THREE.Mesh(new THREE.CylinderGeometry(.0042, .0048, .006, 12),
 nub.position.set(LX + .011, BY + BH / 2 + .007, LZ - .004); RM.add(nub)
 for (let b = 0; b < 3; b++) {
   const btn = new THREE.Mesh(new THREE.BoxGeometry(.032, .004, .014), tpDark)
-  btn.position.set(LX - .036 + b * .036, BY + BH / 2 + .003, LZ + .052); RM.add(btn)
+  btn.position.set(LX - .036 + b * .036, BY + BH / 2 + .003, LZ + .052)
+  btn.userData.y0 = btn.position.y; btn.userData.code = 'ClickBtn'; keyMeshes.push(btn); RM.add(btn)
 }
 const tPad = new THREE.Mesh(new THREE.BoxGeometry(.10, .003, .038),
   new THREE.MeshStandardMaterial({ color: 0x101c44, roughness: .25, metalness: .4 }))
-tPad.position.set(LX, BY + BH / 2 + .002, LZ + .082); RM.add(tPad)
+tPad.position.set(LX, BY + BH / 2 + .002, LZ + .082)
+tPad.userData.y0 = tPad.position.y; tPad.userData.code = 'Trackpad'; keyMeshes.push(tPad); RM.add(tPad)
 
 // Hinges + lid open ~100°, screen runs the Anthropic board
 const HY = BY + BH / 2, HZ = LZ - BD / 2
@@ -477,12 +479,18 @@ function pick(cx, cy) {
   return h ? h.point : null
 }
 function keyOf(o) { while (o) { if (o.userData && o.userData.code) return o; o = o.parent } return null }
-function pressCode(code) {
+function pressCode(code, mesh) {
   lastUser = Date.now() / 1000
+  if (mesh && !(code in keyByCode)) {
+    mesh.userData.dip = 1
+    if (code !== 'Trackpad' && code !== 'ClickBtn') return
+    return
+  }
   if (code === 'Backspace') { window.__typed = window.__typed.slice(0, -1); dipKey('Backspace') }
   else if (code === 'Enter') commitLine()
   else if (code.length === 1 && window.__typed.length < 38) { window.__typed += code === ' ' ? ' ' : code.toLowerCase(); dipKey(code === ' ' ? ' ' : code.toLowerCase()) }
   else dipKey(code)
+  if (mesh && (code in keyByCode)) { mesh.userData.dip = 1; return }
 }
 window.__desk = () => deskMode
 R.domElement.style.touchAction = 'none'
@@ -538,7 +546,7 @@ function endPtr(e) {
     lastUser = Date.now() / 1000
     const _p = pick(e.clientX, e.clientY)
     const _k = keyOf(lastHit && lastHit.object)
-    if (_k && canType()) { pressCode(_k.userData.code); return }
+    if (_k && canType()) { pressCode(_k.userData.code, _k); return }
     if (!deskMode && inLap(_p)) goDesk()
   }
   downAt = null
