@@ -231,11 +231,11 @@ for (const p of [[-.5,.355,1.65],[-.5,.355,1.15],[.6,.355,1.65],[.6,.355,1.15]])
 const DS = .72 + .035/2 // desk surface y = .7375
 const LX = -.05 // machine x (same seat)
 const LZ = 1.38
-const TP_B = 0x161618, TP_K = 0x0e0e10, TP_D = 0x232327
+const TP_B = 0x16409e, TP_K = 0x0d2a6e, TP_D = 0x1a4fc4
 const keyMeshes = []
 const tpMat = new THREE.MeshStandardMaterial({ color: TP_B, roughness: .55, metalness: .25 })
 const tpDark = new THREE.MeshStandardMaterial({ color: TP_K, roughness: .6 })
-const tpDeck = new THREE.MeshStandardMaterial({ color: TP_D, roughness: .5 })
+const tpDeck = new THREE.MeshStandardMaterial({ color: 0x2f6ae0, roughness: .45 })
 
 // Base + keyboard deck
 const BW = .32, BD = .215, BH = .014
@@ -271,7 +271,7 @@ for (let b = 0; b < 3; b++) {
   btn.position.set(LX - .036 + b * .036, BY + BH / 2 + .003, LZ - .043); RM.add(btn)
 }
 const tPad = new THREE.Mesh(new THREE.BoxGeometry(.10, .003, .038),
-  new THREE.MeshStandardMaterial({ color: 0x101012, roughness: .25, metalness: .4 }))
+  new THREE.MeshStandardMaterial({ color: 0x101c44, roughness: .25, metalness: .4 }))
 tPad.position.set(LX, BY + BH / 2 + .002, LZ - .075); RM.add(tPad)
 
 // Hinges + lid open ~100°, screen runs the same live terminal
