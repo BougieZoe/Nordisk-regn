@@ -37,40 +37,65 @@ document.body.appendChild(R.domElement)
 
 // ─── Terminal ───
 const CV = document.createElement('canvas'); CV.width = 640; CV.height = 400
-const CX = CV.getContext('2d'); const CL = []
-const CMD = [
-  '$ npx create-app','> Building...','$ npm run dev','> Vite ready','$ git status','> modified: src/App.tsx',
-  '$ git add .',"$ git commit -m 'feat: rain'",'> [main a1b2c3d]','$ pnpm add three','$ cargo build','> Finished',
-  '$ ls src/','$ cat Rain.tsx','  const drops = useMemo(','    () => generateRain(), [])',
-  '  return <mesh><shaderMaterial/></mesh>','$ npm test','> PASS ✓',
-  '$ npx vibe-coding','> ✨ Claude Code...','> ● analyzing','> ● rain shader','> ● refraction',
-  '> ● curtain physics','$ deploy','> ✓ Preview ready',
-]
-let ci = 0, cf = 0
+const CX = CV.getContext('2d')
+window.__typed = ''
+let scrABC = false, scrMsg = '', scrMsgT = 0, scrBatt = 100, scrBattT = 0
+let lastUser = -99
+const TOUR = ['hello, claude', 'rainy day coding', 'nordisk regn']
+let tourP = 0, tourI = 0, tourNext = 0, tourErasing = false
+function drawMark(x, y, sc, color) {
+  CX.strokeStyle = color; CX.lineCap = 'round'
+  CX.lineWidth = sc * .16
+  CX.beginPath(); CX.moveTo(x - sc * .5, y + sc * .5); CX.lineTo(x, y - sc * .5); CX.lineTo(x + sc * .5, y + sc * .5); CX.stroke()
+  CX.lineWidth = sc * .12
+  CX.beginPath(); CX.moveTo(x - sc * .27, y + sc * .13); CX.lineTo(x + sc * .27, y + sc * .13); CX.stroke()
+  CX.beginPath(); CX.moveTo(x + sc * .72, y - sc * .5); CX.lineTo(x + sc * .42, y + sc * .5); CX.stroke()
+}
+function tourTick(now) {
+  if (now - lastUser < 9 || deskModeOn()) return
+  if (now < tourNext) return
+  const ph = TOUR[tourP]
+  if (!tourErasing) {
+    if (tourI < ph.length) { window.__typed = ph.slice(0, ++tourI); tourNext = now + .09 + Math.random() * .12 }
+    else { tourErasing = true; tourNext = now + 2.2 }
+  } else {
+    if (window.__typed.length) { window.__typed = window.__typed.slice(0, -1); tourNext = now + .05 }
+    else { tourErasing = false; tourI = 0; tourP = (tourP + 1) % TOUR.length; tourNext = now + .8 }
+  }
+}
+function deskModeOn() { return typeof deskMode !== 'undefined' && deskMode }
 function updC() {
-  cf++
-  if (cf % 2 === 0) CL.push(CMD[ci++ % CMD.length])
-  if (cf % 30 === 0 && CL.length > 28) CL.shift()
-  CX.fillStyle = '#0a0e14'; CX.fillRect(0, 0, 640, 400)
-  CX.fillStyle = 'rgba(55,80,120,.06)'; CX.fillRect(0, 0, 640, 20)
-  CX.fillStyle = 'rgba(140,180,220,.08)'; CX.font = '9px monospace'
-  CX.fillText('~/workspace — zsh  ●  coding', 12, 13)
-  CX.font = '12px "SF Mono",monospace'
-  for (let i = 0; i < CL.length; i++) {
-    const l = CL[i]; const y = 14 + 24 + i * 14
-    if (y < 24 || y > 358) continue
-    CX.fillStyle = l.startsWith('$') ? '#7ec894' : l.startsWith('>') ? '#6cb0e0' : '#8090a0'
-    CX.fillText(l, 12, y)
+  const now = Date.now() / 1000, cf = Math.floor(now * 30)
+  tourTick(now)
+  if (now - scrBattT > 120) { scrBattT = now; if (scrBatt > 5) scrBatt-- }
+  CX.fillStyle = '#05070c'; CX.fillRect(0, 0, 640, 400)
+  if (scrABC) {
+    CX.fillStyle = '#f2f2f5'; CX.textAlign = 'center'
+    CX.font = '64px ui-monospace, monospace'; CX.fillText('Alphabet', 320, 180)
+    CX.fillStyle = '#8a8a90'; CX.font = '19px ui-monospace, monospace'
+    CX.fillText('A B C D E F G H I J K L M N O P Q R S T U V W X Y Z', 320, 236)
+    CX.fillStyle = 'rgba(140,180,220,.25)'; CX.fillRect(140, 262, 360, 1)
+    CX.fillStyle = '#6a6a70'; CX.font = '14px ui-monospace, monospace'
+    CX.fillText('click: back to terminal', 320, 300)
+    CX.textAlign = 'left'
+    return
   }
-  if (Math.floor(cf / 25) % 2 === 0 && CL.length > 0) {
-    CX.fillStyle = '#7ec894'
-    CX.fillRect(12 + CL[CL.length-1].length * 7, 14 + 24 + (CL.length-1)*14 - 10, 7, 11)
-  }
-  CX.fillStyle = '#0a0e14'; CX.fillRect(0, 366, 640, 34)
-  CX.fillStyle = 'rgba(140,180,220,.14)'; CX.fillRect(0, 366, 640, 1)
-  CX.fillStyle = '#7ec894'; CX.font = '12px "SF Mono",monospace'
-  const _inp = window.__typed || ''
-  CX.fillText('> ' + _inp.slice(-52) + (Math.floor(cf / 25) % 2 === 0 ? '▌' : ''), 12, 388)
+  CX.fillStyle = 'rgba(255,255,255,.022)'
+  for (let _y = 0; _y < 400; _y += 4) CX.fillRect(0, _y, 640, 1)
+  drawMark(320, 148, 118, '#f2f2f5')
+  CX.fillStyle = '#e8e8ea'; CX.font = '22px ui-monospace, Menlo, monospace'; CX.textAlign = 'left'
+  const _inp = (window.__typed || '').slice(-38)
+  CX.fillText('> ' + _inp + (Math.floor(cf / 25) % 2 === 0 ? '▌' : ''), 52, 302)
+  if (scrMsg && now < scrMsgT) { CX.fillStyle = '#7ec894'; CX.fillText(scrMsg, 52, 330) }
+  CX.fillStyle = 'rgba(140,180,220,.22)'; CX.fillRect(24, 352, 592, 1)
+  CX.fillStyle = '#8a8a90'; CX.font = '13px ui-monospace, monospace'
+  CX.fillText('ThinkPad', 28, 378)
+  CX.fillStyle = '#e5484d'; CX.beginPath(); CX.arc(92, 373, 4, 0, 6.29); CX.fill()
+  const _d = new Date()
+  const _t = _d.getHours() + ':' + String(_d.getMinutes()).padStart(2, '0')
+  CX.fillStyle = '#8a8a90'; CX.textAlign = 'right'; CX.fillText(_t, 560, 378); CX.textAlign = 'left'
+  CX.strokeStyle = '#8a8a90'; CX.lineWidth = 1.5; CX.strokeRect(572, 366, 34, 14)
+  CX.fillStyle = '#e8e8ea'; CX.fillRect(574, 368, 30 * scrBatt / 100, 10)
 }
 updC()
 const TX = new THREE.CanvasTexture(CV)
@@ -227,54 +252,69 @@ for (const p of [[-.5,.355,1.65],[-.5,.355,1.15],[.6,.355,1.65],[.6,.355,1.15]])
   const leg = new THREE.Mesh(new THREE.CylinderGeometry(.02,.02,.685,6), legM); leg.position.set(p[0], .355, p[2]); RM.add(leg)
 }
 
-// ─── THINKPAD X1 (Eclipse Black, red TrackPoint) on the desk ───
+// ─── THINKPAD X1 · IBM BLUE — same machine as the thinkpad-x1 figure ───
+// 6 rows, 76 keys, red TrackPoint, 3 buttons, 120mm glass pad,
+// camera bar, ports both sides, rear vents, front LEDs.
 const DS = .72 + .035/2 // desk surface y = .7375
 const LX = -.05 // machine x (same seat)
 const LZ = 1.38
 const TP_B = 0x16409e, TP_K = 0x0d2a6e, TP_D = 0x1a4fc4
-const keyMeshes = []
-const tpMat = new THREE.MeshStandardMaterial({ color: TP_B, roughness: .55, metalness: .25 })
+const tpMat = new THREE.MeshStandardMaterial({ color: TP_B, roughness: .5, metalness: .25 })
 const tpDark = new THREE.MeshStandardMaterial({ color: TP_K, roughness: .6 })
 const tpDeck = new THREE.MeshStandardMaterial({ color: 0x2f6ae0, roughness: .45 })
+const tpSlot = new THREE.MeshStandardMaterial({ color: 0x0a1230, roughness: .6 })
+const keyMeshes = []
 
-// Base + keyboard deck
+// Base + keyboard well
 const BW = .32, BD = .215, BH = .014
 const BY = DS + BH / 2
 const tBase = new THREE.Mesh(new THREE.BoxGeometry(BW, BH, BD), tpMat)
 tBase.position.set(LX, BY, LZ); RM.add(tBase)
-const tWell = new THREE.Mesh(new THREE.BoxGeometry(.29, .004, .115), tpDark)
-tWell.position.set(LX, BY + BH / 2 + .001, LZ + .028); RM.add(tWell)
+const tWell = new THREE.Mesh(new THREE.BoxGeometry(.29, .004, .13), tpDark)
+tWell.position.set(LX, BY + BH / 2 + .001, LZ + .012); RM.add(tWell)
 
-// Keys: 5 rows + bottom row with wide spacebar
-for (let r = 0; r < 4; r++)
-  for (let c = 0; c < 12; c++) {
-    const key = new THREE.Mesh(new THREE.BoxGeometry(.019, .006, .014), tpDeck)
-    key.position.set(LX + (c - 5.5) * .0235, BY + BH / 2 + .005, LZ + .062 - r * .0205); key.userData.y0 = key.position.y; keyMeshes.push(key); RM.add(key)
+// Six rows like the figure: widths in key units, U = .018
+const KU = .018, KX0 = LX - 7.5 * KU, KY = .006
+const KROWS = [
+  [["Esc",1],["F1",1],["F2",1],["F3",1],["F4",1],["F5",1],["F6",1],["F7",1],["F8",1],["F9",1],["F10",1],["F11",1],["F12",1],["Power",2]],
+  [["`",1],["1",1],["2",1],["3",1],["4",1],["5",1],["6",1],["7",1],["8",1],["9",1],["0",1],["-",1],["=",1],["Backspace",2]],
+  [["Tab",1.5],["q",1],["w",1],["e",1],["r",1],["t",1],["y",1],["u",1],["i",1],["o",1],["p",1],["[",1],["]",1],["\\",1.5]],
+  [["CapsLock",1.75],["a",1],["s",1],["d",1],["f",1],["g",1],["h",1],["j",1],["k",1],["l",1],[";",1],["'",1],["Enter",2.25]],
+  [["Shift",2.25],["z",1],["x",1],["c",1],["v",1],["b",1],["n",1],["m",1],[",",1],[".",1],["/",1],["ShiftRight",2.75]],
+  [["Fn",1],["Ctrl",1],["Win",1],["Alt",1],[" ",7],["AltGr",1],["Left",1],["UpDown",1],["Right",1]],
+]
+const KEYCODES = []
+KROWS.forEach((row, r) => {
+  let kx = KX0
+  const kz = LZ + .062 - r * .0195
+  for (const [code, w] of row) {
+    const wd = w * KU - .0035
+    const key = new THREE.Mesh(new THREE.BoxGeometry(wd, .006, .0155), tpDeck)
+    key.position.set(kx + wd / 2, BY + BH / 2 + .005, kz)
+    key.userData.y0 = key.position.y; key.userData.code = code
+    keyMeshes.push(key); KEYCODES.push(code); RM.add(key)
+    kx += w * KU
   }
-for (let c = 0; c < 3; c++) {
-  const key = new THREE.Mesh(new THREE.BoxGeometry(.019, .006, .014), tpDeck)
-  key.position.set(LX + (c - 5.5) * .0235, BY + BH / 2 + .005, LZ - .020); key.userData.y0 = key.position.y; keyMeshes.push(key); RM.add(key)
-}
-const tSpace = new THREE.Mesh(new THREE.BoxGeometry(.095, .006, .014), tpDeck)
-tSpace.position.set(LX - .004, BY + BH / 2 + .005, LZ - .020); tSpace.userData.y0 = tSpace.position.y; keyMeshes.push(tSpace); RM.add(tSpace)
-for (let c = 0; c < 4; c++) {
-  const key = new THREE.Mesh(new THREE.BoxGeometry(.019, .006, .014), tpDeck)
-  key.position.set(LX + (c + 2.5) * .0235, BY + BH / 2 + .005, LZ - .020); key.userData.y0 = key.position.y; keyMeshes.push(key); RM.add(key)
-}
+})
+// fingerprint ring on the power key (last key of row 0)
+const pring = new THREE.Mesh(new THREE.TorusGeometry(.005, .0011, 8, 24),
+  new THREE.MeshStandardMaterial({ color: 0x9ec1ff, roughness: .3, metalness: .6 }))
+pring.rotation.x = -Math.PI / 2
+pring.position.set(KX0 + 14 * KU - .0045, BY + BH / 2 + .0085, LZ + .062); RM.add(pring)
 
 // Red TrackPoint nub between G/H + three click buttons + glass pad
-const nub = new THREE.Mesh(new THREE.CylinderGeometry(.0045, .005, .006, 12),
+const nub = new THREE.Mesh(new THREE.CylinderGeometry(.0042, .0048, .006, 12),
   new THREE.MeshStandardMaterial({ color: 0x330000, emissive: 0xcc2222, emissiveIntensity: .9, roughness: .5 }))
-nub.position.set(LX + .012, BY + BH / 2 + .007, LZ + .031); RM.add(nub)
+nub.position.set(LX + .011, BY + BH / 2 + .007, LZ + .023); RM.add(nub)
 for (let b = 0; b < 3; b++) {
   const btn = new THREE.Mesh(new THREE.BoxGeometry(.032, .004, .014), tpDark)
-  btn.position.set(LX - .036 + b * .036, BY + BH / 2 + .003, LZ - .043); RM.add(btn)
+  btn.position.set(LX - .036 + b * .036, BY + BH / 2 + .003, LZ - .052); RM.add(btn)
 }
 const tPad = new THREE.Mesh(new THREE.BoxGeometry(.10, .003, .038),
   new THREE.MeshStandardMaterial({ color: 0x101c44, roughness: .25, metalness: .4 }))
-tPad.position.set(LX, BY + BH / 2 + .002, LZ - .075); RM.add(tPad)
+tPad.position.set(LX, BY + BH / 2 + .002, LZ - .082); RM.add(tPad)
 
-// Hinges + lid open ~100°, screen runs the same live terminal
+// Hinges + lid open ~100°, screen runs the Anthropic board
 const HY = BY + BH / 2, HZ = LZ + BD / 2
 for (const hx of [-.11, .11]) {
   const hg = new THREE.Mesh(new THREE.CylinderGeometry(.008, .008, .05, 12), tpDark)
@@ -289,18 +329,57 @@ RM.add(tLid)
 const lidBack = new THREE.Mesh(new THREE.BoxGeometry(SW, SH, .008), tpMat)
 lidBack.position.set(0, SH / 2, 0); tLid.add(lidBack)
 const tDisp = new THREE.Mesh(new THREE.PlaneGeometry(SW - .02, SH - .024), new THREE.MeshStandardMaterial({
-  map: TX, emissive: new THREE.Color(.1, .18, .28), emissiveMap: TX, emissiveIntensity: 1.15,
+  map: TX, emissive: new THREE.Color(.12, .2, .32), emissiveMap: TX, emissiveIntensity: 1.15,
   roughness: .05, metalness: 0
 }))
 tDisp.position.set(0, SH / 2, .0045); tLid.add(tDisp)
-// camera dot + red status dot on the bezel
-const tCam = new THREE.Mesh(new THREE.CircleGeometry(.0022, 12),
-  new THREE.MeshStandardMaterial({ color: 0x0a0f16, roughness: .2 }))
-tCam.position.set(0, SH - .012, .0045); tLid.add(tCam)
+// camera bar: lens + IR + mics + privacy shutter tab + red status dot
+const tCam = new THREE.Mesh(new THREE.CircleGeometry(.0024, 12),
+  new THREE.MeshStandardMaterial({ color: 0x0a0f16, roughness: .15, metalness: .3 }))
+tCam.position.set(0, SH - .013, .0045); tLid.add(tCam)
+const tCamDot = new THREE.Mesh(new THREE.CircleGeometry(.0009, 8),
+  new THREE.MeshStandardMaterial({ color: 0x9ec1ff, emissive: 0x4488ff, emissiveIntensity: .8 }))
+tCamDot.position.set(0, SH - .013, .0047); tLid.add(tCamDot)
+const tIR = new THREE.Mesh(new THREE.CircleGeometry(.0016, 10),
+  new THREE.MeshStandardMaterial({ color: 0x111622, roughness: .3 }))
+tIR.position.set(.012, SH - .013, .0045); tLid.add(tIR)
+for (const mx of [-.02, .02]) {
+  const mic = new THREE.Mesh(new THREE.CircleGeometry(.0011, 8), tpSlot)
+  mic.position.set(mx, SH - .013, .0045); tLid.add(mic)
+}
+const tShut = new THREE.Mesh(new THREE.BoxGeometry(.014, .004, .002), tpDark)
+tShut.position.set(-.024, SH - .013, .005); tLid.add(tShut)
 const tDot = new THREE.Mesh(new THREE.CircleGeometry(.0018, 12),
   new THREE.MeshStandardMaterial({ color: 0x220000, emissive: 0xff2a2a, emissiveIntensity: 1.2 }))
 tDot.position.set(-SW / 2 + .018, .012, .0045); tLid.add(tDot)
 
+// Ports: left 2x USB-C + HDMI, right 2x USB-A + combo + Kensington
+for (const pz of [-.02, .01]) {
+  const usb = new THREE.Mesh(new THREE.BoxGeometry(.004, .007, .02), tpSlot)
+  usb.position.set(LX - BW / 2 - .001, BY + .001, LZ + pz); RM.add(usb)
+}
+const hdmi = new THREE.Mesh(new THREE.BoxGeometry(.004, .006, .034), tpSlot)
+hdmi.position.set(LX - BW / 2 - .001, BY + .001, LZ + .055); RM.add(hdmi)
+for (const pz of [-.02, .008]) {
+  const usb = new THREE.Mesh(new THREE.BoxGeometry(.004, .008, .016), tpSlot)
+  usb.position.set(LX + BW / 2 + .001, BY, LZ + pz); RM.add(usb)
+}
+const combo = new THREE.Mesh(new THREE.CylinderGeometry(.004, .004, .004, 12), tpSlot)
+combo.rotation.z = Math.PI / 2
+combo.position.set(LX + BW / 2 + .001, BY, LZ + .045); RM.add(combo)
+const kens = new THREE.Mesh(new THREE.BoxGeometry(.004, .004, .014), tpSlot)
+kens.position.set(LX + BW / 2 + .001, BY - .002, LZ + .075); RM.add(kens)
+// Rear vent slats + front lip LEDs
+for (let i = 0; i < 5; i++) {
+  const v = new THREE.Mesh(new THREE.BoxGeometry(.02, .03, .003), tpSlot)
+  v.position.set(LX - .08 + i * .04, BY + .01, LZ - BD / 2 - .001); RM.add(v)
+}
+const ledCols = [0x39d353, 0x39d353, 0xffb020]
+for (let i = 0; i < 3; i++) {
+  const led = new THREE.Mesh(new THREE.BoxGeometry(.006, .004, .002),
+    new THREE.MeshStandardMaterial({ color: 0x111111, emissive: ledCols[i], emissiveIntensity: 1.1 }))
+  led.position.set(LX - .1 + i * .025, DS + .004, LZ + BD / 2 + .001); RM.add(led)
+}
 
 // ─── TEA ───
 const teaCup = new THREE.Mesh(new THREE.CylinderGeometry(.032, .025, .05, 16),
@@ -438,7 +517,10 @@ function endPtr(e) {
   if (ptrs.size < 3) ptrs.delete('pinch')
   R.domElement.style.cursor = ''
   if (wasDown && Math.hypot(e.clientX - wasDown[0], e.clientY - wasDown[1]) < 6 && wasDown[2] === 0) {
-    if (!deskMode && inLap(pick(e.clientX, e.clientY))) goDesk()
+    lastUser = Date.now() / 1000
+    const _p = pick(e.clientX, e.clientY)
+    if (deskMode && _p && _p.x > LX - .15 && _p.x < LX + .15 && _p.y > .82 && _p.y < 1.03 && _p.z > 1.44 && _p.z < 1.50) { scrABC = !scrABC; return }
+    if (!deskMode && inLap(_p)) goDesk()
   }
   downAt = null
 }
@@ -457,19 +539,27 @@ addEventListener('keydown', (e) => {
   if (e.metaKey || e.ctrlKey || e.altKey) return
   if (e.key === 'Escape') { goRoom(); return }
   if (!canType()) return
-  if (e.key === 'Backspace') { window.__typed = window.__typed.slice(0, -1); dip(-1) }
+  lastUser = Date.now() / 1000
+  if (e.key === 'Backspace') { window.__typed = window.__typed.slice(0, -1); dipKey('Backspace') }
   else if (e.key === 'Enter') commitLine()
-  else if (e.key.length === 1 && window.__typed.length < 48) { window.__typed += e.key; dip(e.key.charCodeAt(0)) }
+  else if (e.key === 'Shift') dipKey(e.code === 'ShiftRight' ? 'ShiftRight' : 'Shift')
+  else if (e.key === 'ArrowLeft') dipKey('Left')
+  else if (e.key === 'ArrowRight') dipKey('Right')
+  else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') dipKey('UpDown')
+  else if (e.key.length === 1 && window.__typed.length < 38) { window.__typed += e.key; dipKey(e.key === ' ' ? ' ' : e.key.toLowerCase()) }
 })
-function dip(code) { const m = keyMeshes[Math.abs(code) % keyMeshes.length]; if (m) m.userData.dip = 1 }
+const keyByCode = {}
+for (const m of keyMeshes) keyByCode[m.userData.code] = m
+function dipKey(code) { const m = keyByCode[code] || keyMeshes[Math.abs(String(code).length * 31) % keyMeshes.length]; if (m) m.userData.dip = 1 }
+function dip(code) { dipKey(typeof code === 'string' ? code : 'Enter') }
 function commitLine() {
   const t = window.__typed.trim()
   if (t.toLowerCase() === 'bougiezoe') {
-    CL.push('$ bougiezoe', '> → github.com/bougiezoe')
+    scrMsg = '→ github.com/bougiezoe'; scrMsgT = Date.now() / 1000 + 2.5
     try { window.open('https://github.com/bougiezoe', '_blank') } catch (err) {}
   }
-  else if (t) CL.push('$ ' + t)
-  window.__typed = ''; dip(13)
+  else if (t) { scrMsg = '$ ' + t; scrMsgT = Date.now() / 1000 + 1.6 }
+  window.__typed = ''; dipKey('Enter')
 }
 const TOAST = document.createElement('div')
 TOAST.style.cssText = 'position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:30;font-size:11px;letter-spacing:1px;color:rgba(255,255,255,.75);background:rgba(0,0,0,.45);backdrop-filter:blur(10px);padding:7px 16px;border-radius:16px;border:1px solid rgba(255,255,255,.08);transition:opacity .8s;pointer-events:none'
