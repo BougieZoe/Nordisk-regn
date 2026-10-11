@@ -345,7 +345,7 @@ const HOME_POS = CAM.position.clone(), HOME_TGT = new THREE.Vector3(.05, .75, 0)
 const DESK_POS = new THREE.Vector3(LX, .93, 2.02), DESK_TGT = new THREE.Vector3(LX, .855, 1.40)
 const lookCur = HOME_TGT.clone()
 let camGoal = null, deskMode = false
-const LAPBOX = { x0: -.23, x1: .13, y0: .745, y1: 1.02, z0: 1.22, z1: 1.66 }
+const LAPBOX = { x0: -.30, x1: .16, y0: .72, y1: 1.05, z0: 1.22, z1: 1.66 }
 function inLap(p) { return p && p.x > LAPBOX.x0 && p.x < LAPBOX.x1 && p.y > LAPBOX.y0 && p.y < LAPBOX.y1 && p.z > LAPBOX.z0 && p.z < LAPBOX.z1 }
 function goDesk() { deskMode = true; camGoal = { pos: DESK_POS, tgt: DESK_TGT }; toast('⌨️ 直接打字上屏 · 输入 bougiezoe 有惊喜 · Esc 回房间') }
 function goRoom() { deskMode = false; window.__typed = ''; camGoal = { pos: HOME_POS, tgt: HOME_TGT } }
