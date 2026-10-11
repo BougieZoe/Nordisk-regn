@@ -270,8 +270,8 @@ const BW = .32, BD = .215, BH = .014
 const BY = DS + BH / 2
 const tBase = new THREE.Mesh(new THREE.BoxGeometry(BW, BH, BD), tpMat)
 tBase.position.set(LX, BY, LZ); RM.add(tBase)
-const tWell = new THREE.Mesh(new THREE.BoxGeometry(.29, .004, .13), tpDark)
-tWell.position.set(LX, BY + BH / 2 + .001, LZ + .012); RM.add(tWell)
+const tWell = new THREE.Mesh(new THREE.BoxGeometry(.29, .004, .14), tpDark)
+tWell.position.set(LX, BY + BH / 2 + .001, LZ - .008); RM.add(tWell)
 
 // Six rows like the figure: widths in key units, U = .018
 const KU = .018, KX0 = LX - 7.5 * KU, KY = .006
@@ -287,7 +287,7 @@ const KEYCODES = []
 const keyTopMat = new THREE.MeshStandardMaterial({ color: 0x4a86e8, roughness: .4 })
 KROWS.forEach((row, r) => {
   let kx = KX0
-  const kz = LZ + .062 - r * .0195
+  const kz = LZ - .062 + r * .0195
   for (const [code, w] of row) {
     const wd = w * KU - .0035
     const key = new THREE.Mesh(new THREE.BoxGeometry(wd, .006, .0155), tpDeck)
@@ -303,22 +303,22 @@ KROWS.forEach((row, r) => {
 const pring = new THREE.Mesh(new THREE.TorusGeometry(.005, .0011, 8, 24),
   new THREE.MeshStandardMaterial({ color: 0x9ec1ff, roughness: .3, metalness: .6 }))
 pring.rotation.x = -Math.PI / 2
-pring.position.set(KX0 + 14 * KU - .0045, BY + BH / 2 + .0085, LZ + .062); RM.add(pring)
+pring.position.set(KX0 + 14 * KU - .0045, BY + BH / 2 + .0085, LZ - .062); RM.add(pring)
 
 // Red TrackPoint nub between G/H + three click buttons + glass pad
 const nub = new THREE.Mesh(new THREE.CylinderGeometry(.0042, .0048, .006, 12),
   new THREE.MeshStandardMaterial({ color: 0x330000, emissive: 0xcc2222, emissiveIntensity: .9, roughness: .5 }))
-nub.position.set(LX + .011, BY + BH / 2 + .007, LZ + .023); RM.add(nub)
+nub.position.set(LX + .011, BY + BH / 2 + .007, LZ - .004); RM.add(nub)
 for (let b = 0; b < 3; b++) {
   const btn = new THREE.Mesh(new THREE.BoxGeometry(.032, .004, .014), tpDark)
-  btn.position.set(LX - .036 + b * .036, BY + BH / 2 + .003, LZ - .052); RM.add(btn)
+  btn.position.set(LX - .036 + b * .036, BY + BH / 2 + .003, LZ + .052); RM.add(btn)
 }
 const tPad = new THREE.Mesh(new THREE.BoxGeometry(.10, .003, .038),
   new THREE.MeshStandardMaterial({ color: 0x101c44, roughness: .25, metalness: .4 }))
-tPad.position.set(LX, BY + BH / 2 + .002, LZ - .082); RM.add(tPad)
+tPad.position.set(LX, BY + BH / 2 + .002, LZ + .082); RM.add(tPad)
 
 // Hinges + lid open ~100°, screen runs the Anthropic board
-const HY = BY + BH / 2, HZ = LZ + BD / 2
+const HY = BY + BH / 2, HZ = LZ - BD / 2
 for (const hx of [-.11, .11]) {
   const hg = new THREE.Mesh(new THREE.CylinderGeometry(.008, .008, .05, 12), tpDark)
   hg.rotation.z = Math.PI / 2
@@ -357,28 +357,28 @@ const tDot = new THREE.Mesh(new THREE.CircleGeometry(.0018, 12),
 tDot.position.set(-SW / 2 + .018, .012, .0045); tLid.add(tDot)
 
 // Ports: left 2x USB-C + HDMI, right 2x USB-A + combo + Kensington
-for (const pz of [-.02, .01]) {
+for (const pz of [.02, -.01]) {
   const usb = new THREE.Mesh(new THREE.BoxGeometry(.004, .007, .02), tpSlot)
   usb.position.set(LX - BW / 2 - .001, BY + .001, LZ + pz); RM.add(usb)
 }
 const hdmi = new THREE.Mesh(new THREE.BoxGeometry(.004, .006, .034), tpSlot)
-hdmi.position.set(LX - BW / 2 - .001, BY + .001, LZ + .055); RM.add(hdmi)
-for (const pz of [-.02, .008]) {
+hdmi.position.set(LX - BW / 2 - .001, BY + .001, LZ - .055); RM.add(hdmi)
+for (const pz of [.02, -.008]) {
   const usb = new THREE.Mesh(new THREE.BoxGeometry(.004, .008, .016), tpSlot)
   usb.position.set(LX + BW / 2 + .001, BY, LZ + pz); RM.add(usb)
 }
 const combo = new THREE.Mesh(new THREE.CylinderGeometry(.004, .004, .004, 12), tpSlot)
 combo.rotation.z = Math.PI / 2
-combo.position.set(LX + BW / 2 + .001, BY, LZ + .045); RM.add(combo)
+combo.position.set(LX + BW / 2 + .001, BY, LZ - .045); RM.add(combo)
 const kens = new THREE.Mesh(new THREE.BoxGeometry(.004, .004, .014), tpSlot)
-kens.position.set(LX + BW / 2 + .001, BY - .002, LZ + .075); RM.add(kens)
+kens.position.set(LX + BW / 2 + .001, BY - .002, LZ - .075); RM.add(kens)
 // Soft cool fill over the laptop so its IBM blue reads like the figure
 const lapFill = new THREE.PointLight(0xcfd8ff, .8, 1.9)
 lapFill.position.set(LX, 1.78, 1.82); RM.add(lapFill)
 // Rear vent slats + front lip LEDs
 for (let i = 0; i < 5; i++) {
-  const v = new THREE.Mesh(new THREE.BoxGeometry(.02, .03, .003), tpSlot)
-  v.position.set(LX - .08 + i * .04, BY + .01, LZ - BD / 2 - .001); RM.add(v)
+  const v = new THREE.Mesh(new THREE.BoxGeometry(.02, .008, .003), tpSlot)
+  v.position.set(LX - .08 + i * .04, BY + .002, LZ - BD / 2 - .0005); RM.add(v)
 }
 const ledCols = [0x39d353, 0x39d353, 0xffb020]
 for (let i = 0; i < 3; i++) {
@@ -525,7 +525,7 @@ function endPtr(e) {
   if (wasDown && Math.hypot(e.clientX - wasDown[0], e.clientY - wasDown[1]) < 6 && wasDown[2] === 0) {
     lastUser = Date.now() / 1000
     const _p = pick(e.clientX, e.clientY)
-    if (deskMode && _p && _p.x > LX - .15 && _p.x < LX + .15 && _p.y > .82 && _p.y < 1.03 && _p.z > 1.44 && _p.z < 1.50) { scrABC = !scrABC; return }
+    if (deskMode && _p && _p.x > LX - .15 && _p.x < LX + .15 && _p.y > .82 && _p.y < 1.03 && _p.z > 1.26 && _p.z < 1.30) { scrABC = !scrABC; return }
     if (!deskMode && inLap(_p)) goDesk()
   }
   downAt = null
